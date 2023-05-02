@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" class="login-content" data-ng-app="materialAdmin">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="Generator" content="EditPlus®">
+	<meta name="Author" content="">
+	<meta name="Keywords" content="">
+	<meta name="Description" content="">
+	<title>app后台管理</title>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<link href="css/material-design-iconic-font/css/material-design-iconic-font.min.css" rel="stylesheet"
+		type="text/css">
+	<link href="css/app.min.1.css" rel="stylesheet" type="text/css">
+	<script src="../../js/vue.js"></script>
+	<style>
+		input {
+			font-size: 14px !important;
+		}
+	</style>
+</head>
+
+<body class="login-content" data-ng-controller="loginCtrl as lctrl">
+	<div id="app">
+		<div class="lc-block" id="l-login" data-ng-class="{'toggled':lctrl.login === 1}">
+			<h1 class="lean">管理</h1>
+			<div class="input-group m-b-20">
+				<span class="input-group-addon">
+					<i class="zmdi zmdi-account"></i>
+				</span>
+				<div class="fg-line">
+					<input type="text" class="form-control" placeholder="用户名" regex="^\w{3,16}$" value=""
+						v-model="username" />
+				</div>
+			</div>
+			<div class="input-group m-b-20">
+				<span class="input-group-addon">
+					<i class="zmdi zmdi-male"></i>
+				</span>
+				<div class="fg-line">
+					<input type="password" class="form-control" placeholder="密码" regex="^\w+" value=""
+						v-model="password" />
+				</div>
+			</div>
+			<div class="clearfix"></div>
+
+			<a @click="login()" class="btn btn-login btn-danger btn-float">
+				<i class="zmdi zmdi-arrow-forward"></i>
+			</a>
+		</div>
+	</div>
+</body>
+
+<script src="js/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="js/log.js"></script>
+<script src="js/bower_components/angular/angular.min.js"></script>
+<script src="js/bower_components/angular-resource/angular-resource.min.js"></script>
+<script src="js/bower_components/angular-animate/angular-animate.min.js"></script>
+<script src="js/bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+<script src="js/bower_components/angular-loading-bar/src/loading-bar.js"></script>
+<script src="js/bower_components/oclazyload/dist/ocLazyLoad.min.js"></script>
+<script src="js/bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+<script src="js/bower_components/angular-nouislider/src/nouislider.min.js"></script>
+<script src="js/bower_components/ng-table/dist/ng-table.min.js"></script>
+<script src="js/app.js"></script>
+<script src="js/controllers/main.js"></script>
+<script src="js/controllers/ui-bootstrap.js"></script>
+<script src="js/modules/form.js"></script>
+<script>
+	new Vue({
+		el: '#app',
+		data: {
+			username: "",
+			password: "",
+		},
+		created() {
+
+		},
+		methods: {
+			login() {
+				// 构建请求数据
+				const requestData = {
+					username: this.username,
+					password: this.password,
+				};
+				// 调用接口获取数据
+				fetch('http://localhost:3000/user/login', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(requestData),
+				})
+					.then(response => response.json())
+					.then(data => {
+						var token = data.data.token;
+						console.log(token);
+						// 跳转到index页面
+						window.location.href = "../../index.html";
+						// 在浏览器中存储token
+						console.log(token);
+						localStorage.setItem("token", token);
+					})
+					.catch(error => {
+					
+						console.log(error)
+					});
+			},
+		},
+	})
+</script>
+
+</html>

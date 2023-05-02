@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>类别列表</title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="format-detection" content="telephone=no">
+	<link rel="stylesheet" href="../../layui/css/layui.css" media="all" />
+	<link rel="stylesheet" href="//at.alicdn.com/t/font_tnyc012u2rlwstt9.css" media="all" />
+	<link rel="stylesheet" href="../../css/news.css" media="all" />
+	<script src="../../js/vue.js"></script>
+	<style>
+		.category_list {
+			width: 900px;
+		}
+
+		.select-box {
+			height: 38px;
+			border: 1px solid #e6e6e6;
+			border-radius: 2px;
+			background-color: #fff;
+		}
+
+		.layui-form-select dl {
+			max-height: 200px;
+			overflow-y: auto;
+		}
+
+		.layui-form-select dl dd.layui-this {
+			background-color: #5FB878;
+			color: #fff;
+		}
+
+		.layui-form-select dl dd:hover {
+			background-color: #3a8ee6;
+			color: #fff;
+		}
+	</style>
+</head>
+
+<body class="childrenBody">
+	<div id="app">
+		<blockquote class="layui-elem-quote news_search">
+
+			<div class="layui-inline">
+
+				<div class="layui-input-inline" style="height: 38px;">
+					<div class="layui-input search_input">
+						<select name="modules" lay-verify="required" lay-search="" lay-filter="test"
+							class="form-select select-box" v-model="tagId">
+							<option value="">
+
+							</option>
+							<option v-for="tag in tags" :key="tag.id" :value="tag.tagId">
+								{{tag.tagName}}
+							</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<a class="layui-btn layui-btn-primary" @click="getAll()"><i class="layui-icon">&#xe615;</i>查询</a>
+
+		</blockquote>
+
+		<div class="left_list">
+			<div class="layui-inline">
+				<a class="layui-btn layui-btn-normal cateAdd_btn" @click="addTag()">添加类别</a>
+			</div>
+		</div>
+		<div class="layui-form category_list">
+			<table class="layui-table">
+
+				<thead>
+					<tr>
+						<th style="text-align:left;">类别名称</th>
+						<th>文章数量</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="tag in tagList" ::key="tag.tagName">
+						<td align="left" ondblclick="detailslist()">{{tag.tagName}}</td>
+						<td>{{tag.count}}</td>
+						<td><a class="layui-btn layui-btn-mini layui-btn-normal cate_edit"
+								@click="updateTag(tag.tagName)"><i class="layui-icon">&#xe642;</i>修改</a>
+							<a class="layui-btn layui-btn-danger layui-btn-mini cate_del"
+								@click="deleteTag(tag.tagName)"><i class="layui-icon">&#xe640;</i>删除</a>
+						</td>
+
+					</tr>
+
+				</tbody>
+			</table>
+			<div id="demo1"></div>
+		</div>
+		<!--以下是添加类别-->
+		<div id="cateAdd" class="hide">
+			<form class="layui-form" action="" style="padding: 20px;">
+				<div class="layui-form-item">
+					<label class="layui-form-label">类别名称</label>
+					<div class="layui-input-block">
+						<input type="text" name="title" lay-verify="title" placeholder="请输入类别名称" class="layui-input"
+							v-model="addTagName">
+					</div>
+				</div>
+			</form>
+		</div>
+		<!--以下是修改类别-->
+		<div id="editAdd" class="hide">
+			<form class="layui-form" action="" style="padding: 20px;">
+				<div class="layui-form-item">
+					<label class="layui-form-label">类别名称</label>
+					<div class="layui-input-block">
+						<input type="text" name="title" lay-verify="title" placeholder="请输入类别名称" class="layui-input"
+							v-model="tagName">
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="../../layui/layui.js"></script>
+	<script type="text/javascript" src="../../js/jquery-1.8.2.min.js"></script>
+	<script type="text/javascript" src="../../js/newList.js"></script>
+	<script>
+		new Vue({
+			el: "#app",
+			data: {
+				tagList: [],
+				page: "1",
+				pageSize: "",
+				total: "1",
+				tagName: "",
+				tags: [],
+				tagId: "",
+				addTagName: "",
+			},
+			created() {
+				this.getAll();
+				this.getAllTag();
+			},
+			methods: {
+				getAll() {
+					// 构建请求数据
+					const requestData = {
+						page: this.page,
+						tagId:this.tagId,
+
+					};
+					// 调用接口获取数据
+					fetch('http://localhost:3000/admin/tag/tags', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify(requestData),
+					})
+						.then(response => response.json())
+						.then(data => {
+							this.tagList = data.data.data;
+							this.pageSize = data.data.totalPage;
+							this.total = data.data.totalCount;
+							this.getPage();
+							this.$forceUpdate();
+						})
+						.catch(error => console.log(error));
+				},
+				getPage() {
+					var total = this.total;
+					var vm = this;
+					layui.use(['laypage', 'layer'], function () {
+						var laypage = layui.laypage, layer = layui.layer;
+
+						laypage.render({
+							elem: 'demo1',
+							count: total,
+							layout: ['count', 'prev', 'page', 'next', 'limit', 'skip'],
+							jump: function (obj) {
+								vm.page = obj.curr;
+								console.log(vm);
+								// 构建请求数据
+								const requestData = {
+									page: vm.page,
+									tagId:vm.tagId,
+								};
+								// 调用接口获取数据
+								fetch('http://localhost:3000/admin/tag/tags', {
+									method: 'POST',
+									headers: {
+										'Content-Type': 'application/json',
+									},
+									body: JSON.stringify(requestData),
+								})
+									.then(response => response.json())
+									.then(data => {
+										vm.tagList = data.data.data;
+										vm.pageSize = data.data.totalPage;
+										vm.total = data.data.totalCount;
+									})
+									.catch(error => console.log(error));
+							}
+						});
+					});
+				},
+				addTag() {
+
+					layui.use('layer', function () {
+						var indexlay;
+						var layedit;
+						var $ = layui.jquery,
+							layer = layui.layer;
+						layer.open({
+							type: 1,
+							title: '添加类别',
+							area: ['500px', '200px'],
+							content: $("#cateAdd"),
+							btn: ['提交', '关闭'],
+							btnAlign: 'c',
+							success: function (layero, index) {
+
+							},
+							yes: function (index, layero) {
+								let tagName = $('#cateAdd input').val();
+								console.log(tagName);
+								fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/admin/tag/addTag?tagName=' + tagName)
+									.then(response => response.json())
+									.then(data => {
+										alert("添加成功，请刷新页面");
+										layer.closeAll();
+
+									})
+									.catch(error => console.log(error));
+							},
+
+						});
+					});
+				},
+				deleteTag(tagName) {
+					layer.confirm('确定删除该类别?', {
+						btn: ['确定', '取消']
+					}, () => {
+						fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/admin/tag/deleteTagByTagName?tagName=' + tagName)
+							.then(response => response.json())
+							.then(data => {
+								// 将新数据和之前的数据合并到this.articles数组中
+								this.getPage();
+								this.$forceUpdate();
+								layer.closeAll();
+							})
+							.catch(error => console.log(error));
+					});
+				},
+				updateTag(tagName) {
+					this.tagName = tagName;
+					names = tagName;
+					layui.use('layer', function () {
+						var indexlay;
+						var layedit;
+						var $ = layui.jquery,
+							layer = layui.layer;
+						layer.open({
+							type: 1,
+							title: '修改类别',
+							area: ['500px', '200px'],
+							content: $("#editAdd"),
+							btn: ['修改', '关闭'],
+							btnAlign: 'c',
+							success: function (layero, index) {
+
+							},
+							yes: function (index, layero) {
+								let tagName = $('#editAdd input').val();
+								console.log(tagName);
+								fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/admin/tag/updateTag?tagName=' + names + "&updateName=" + tagName)
+									.then(response => response.json())
+									.then(data => {
+										alert("修改成功，请刷新页面");
+										layer.closeAll();
+
+									})
+									.catch(error => console.log(error));
+							}
+						});
+					});
+				},
+				getAllTag() {
+					fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/tag/geAll')
+						.then(response => response.json())
+						.then(data => {
+							// 将新数据和之前的数据合并到this.articles数组中
+							this.tags = data.data;
+							this.$forceUpdate();
+						})
+						.catch(error => console.log(error));
+				},
+			},
+		})
+	</script>
+</body>
+
+</html>

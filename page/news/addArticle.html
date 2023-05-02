@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>撰写文章 | 个人博客</title>
+    <link rel="shortcut icon" href="images/logo.png" type="image/x-icon">
+    <!-- 引入Bootstrap -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../layui/css/layui.css" rel="stylesheet">
+    <!-- <link href="css/style.css" rel="stylesheet"> -->
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <blockquote class="layui-elem-quote">撰写文章</blockquote>
+
+            <div class="form-group">
+                <label for="category">文章类型</label>
+
+                <select name="category" id="category" class="form-control" v-model="article.tagId">
+                    <option v-for="tag in tags" :key="tag.id" :value="tag.tagId">
+                        {{tag.tagName}}
+                    </option>
+                </select>
+
+            </div>
+
+            <div class="form-group">
+                <label for="title">文章标题</label>
+                <input type="text" class="form-control" id="title" placeholder="请输入文章标题" v-model="article.title">
+            </div>
+
+            <div class="form-group">
+                <label for="content">文章内容</label>
+                <textarea class="form-control" id="content" rows="10" placeholder="请输入文章内容"
+                    v-model="article.content"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="image">上传图片</label>
+                <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="image" lang="zh" @change="onChange">
+                    <label class="custom-file-label" for="image">{{article.imgSrc}}</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" @click="addArticle">立即发布</button>
+        </div>
+
+    </div>
+    <!-- 引入jQuery -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <script src="../../layui/layui.js"></script>
+    <script src="../../js/vue.js"></script>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        
+        data: {
+            id: "",
+            author:"",
+            article: {
+                title: "",
+                content: "",
+                author: "",
+                tagId: "",
+                imgSrc: "选择文件",
+
+            },
+            tags: [],
+        },
+        created() {
+            const searchParams = new URLSearchParams(window.location.search);
+            this.id = searchParams.get('id');
+            console.log(this.id);
+            this.getUserName();
+            // 构建请求数据
+            const requestData = {
+                numbers: this.id,
+            };
+            // 调用接口获取数据
+            fetch('http://localhost:3000/article/getArticleByNumber', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // 调用接口获取数据
+                    // 将数据渲染到模板中
+                    this.article = data.data;
+
+                    this.article.tagId = data.data.tag;
+                })
+                .catch(error => console.log(error));
+            this.getAllTag();
+        },
+        methods: {
+            getUserName() {
+                // 调用接口获取数据
+                var token = localStorage.getItem('token');
+                fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/encryptionAndDecryption?token=' + token)
+                    .then(response => response.json())
+                    .then(data => {
+                        // 将数据渲染到模板中
+                        this.author = data.message;
+                    })
+                    .catch(error => console.log(error));
+            },
+            onChange(e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var formData = new FormData();
+                formData.append('image', file);
+
+                fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/file/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.article.imgSrc = data.message;
+                    });
+            },
+            getAllTag() {
+                fetch('http://localhost:8080/Gradle___org_example___taritari_blog_1_0_SNAPSHOT_war/tag/geAll')
+                    .then(response => response.json())
+                    .then(data => {
+                        // 将新数据和之前的数据合并到this.articles数组中
+                        this.tags = data.data;
+                        this.$forceUpdate();
+                    })
+                    .catch(error => console.log(error));
+            },
+            addArticle() {
+                let number = this.id;
+                if (number != null && number != "") {
+                    console.log(number);
+                } else {
+                    // 构建请求数据
+                    const requestData = {
+                        author: this.author,
+                        title: this.article.title,
+                        content: this.article.content,
+                        imgSrc: "/img/art/" + this.article.imgSrc,
+                        tagId: this.article.tagId
+                    };
+                    // 调用接口获取数据
+                    fetch('http://localhost:3000/article/addArticle', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert("添加成功");
+                            window.close();
+                        })
+                        .catch(error => console.log(error));
+                }
+
+            }
+        },
+
+
+    })
+</script>
+
+</html>

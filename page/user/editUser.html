@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户信息</title>
+    <link rel="stylesheet" href="../../layui/css/layui.css">
+    <script src="../../layui/layui.js"></script>
+    <script src="../../js/jquery-1.8.2.min.js"></script>
+    <script src="../../js/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div class="layui-container">
+            <div class="layui-row">
+                <div class="layui-col-md6">
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">用户名</label>
+                        <div class="layui-input-block">
+                            <input type="hidden" id="id" autocomplete="off" class="layui-input" :value="id"
+                                @input="id = $event.target.value">
+                            <input type="text" id="username" autocomplete="off" class="layui-input" :value="username"
+                                @input="username = $event.target.value">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">邮箱</label>
+                        <div class="layui-input-block">
+                            <input type="text" id="email" autocomplete="off" class="layui-input" :value="email"
+                                @input="email = $event.target.value">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">生日</label>
+                        <div class="layui-input-block">
+                            <input type="date" id="birthday" autocomplete="off" class="layui-input" :value="birthday"
+                                @input="birthday = $event.target.value">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-row">
+                <div class="layui-col-md12">
+                    <button class="layui-btn layui-btn-fluid layui-btn-normal" style="margin: 0 auto; width: 100%;"
+                        @click="updateUser()">修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    </script>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                username: "",
+                email: "",
+                birthday: "",
+                id: ""
+            },
+            created() {
+                window.addEventListener('message', function (e) {
+                    vm.username = e.data.username
+
+                    vm.email = e.data.email
+
+                    vm.birthday = e.data.birthday
+                    
+                    vm.id = e.data.id
+                    console.log(e.data);
+                })
+            },
+            methods: {
+                updateUser() {
+                    const username = document.querySelector('#username').value;
+                    const email = document.querySelector('#email').value;
+                    const birthday = document.querySelector('#birthday').value;
+                    const id = document.querySelector('#id').value;
+                    // 构建请求数据
+                    const requestData = {
+                        username: username,
+                        email: email,
+                        birthday: birthday,
+                        id: id,
+                    };
+                    // 调用接口获取数据
+                    fetch('http://localhost:3000/admin/user/modifyUser', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData),
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert("修改成功");
+                            window.close();
+                        })
+                        .catch(error => console.log(error));
+
+                }
+            },
+        })
+    </script>
+</body>
+
+</html>
